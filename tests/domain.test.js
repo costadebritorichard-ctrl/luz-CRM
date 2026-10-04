@@ -1,5 +1,25 @@
 ﻿const {test}=require('node:test'),assert=require('node:assert/strict'),D=require('../domain');
 const actor={id:'admin',name:'Teste'};
+test('Históricos novos preservam acentos e separadores',()=>{
+  const s=D.seed(),entries=[...s.audit,...s.contacts.flatMap(c=>c.history)];
+  assert.ok(entries.some(e=>e.action==='Doação recebida'));
+  assert.ok(entries.some(e=>e.action==='Conversão em doador'));
+  for(const e of entries){assert.doesNotMatch(e.action,/\?|�/);assert.doesNotMatch(e.details,/ \? |�/)}
+});
+test('Repara históricos antigos após serialização sem alterar mensagens do usuário',()=>{
+  const payment={id:'p',action:'Doa??o recebida',details:'R$ 100.00 ? Obras sociais ? LUZ-00001'};
+  const conversion={id:'c',action:'Convers?o em doador',details:'Recorrente ? R$ 100.00'};
+  const note={action:'Interação registrada',details:'Pode ligar amanhã?'};
+  const s=JSON.parse(JSON.stringify({audit:[payment,note],contacts:[{history:[payment,conversion,note]}]}));
+  D.repairLegacyHistory(s);
+  assert.equal(s.audit[0].action,'Doação recebida');
+  assert.equal(s.audit[0].details,'R$ 100.00 · Obras sociais · LUZ-00001');
+  assert.equal(s.contacts[0].history[0].action,'Doação recebida');
+  assert.equal(s.contacts[0].history[1].action,'Conversão em doador');
+  assert.equal(s.contacts[0].history[1].details,'Recorrente · R$ 100.00');
+  assert.equal(s.audit[1].details,'Pode ligar amanhã?');
+  const repaired=JSON.stringify(s);D.repairLegacyHistory(s);assert.equal(JSON.stringify(s),repaired);
+});
 function fixture(){const s=D.seed();s.payments=[];s.audit=[];s.tasks=[];s.contacts=[{id:'c',name:'Pessoa Teste',email:'teste@exemplo.com',phone:'',document:'',type:'PF',origin:'Site',funnel:'Inbound',stage:0,history:[],owner:'admin'}];return s}
 test('Contato, duplicidade e documento',()=>{const s=fixture();assert.throws(()=>D.validateContact({...s.contacts[0],email:'',phone:''},s.contacts));assert.throws(()=>D.validateContact({...s.contacts[0],id:'new'},s.contacts));assert.equal(D.documentValid('529.982.247-25','PF'),true);assert.equal(D.documentValid('11.222.333/0001-81','PJ'),true);assert.equal(D.documentValid('111.111.111-11','PF'),false);assert.equal(D.documentValid('12.345.678/0001-00','PJ'),false)});
 test('Movimentacao preserva sequencia, data e operador',()=>{const s=fixture();D.move(s,actor,'c',1,'Interesse');D.move(s,actor,'c',2,'Conheceu a causa');D.move(s,actor,'c',0,'Retomada');assert.equal(s.contacts[0].history.length,3);assert.equal(s.contacts[0].stage,0);assert.equal(s.audit[0].actor,'admin');assert.ok(s.audit[0].at)});
