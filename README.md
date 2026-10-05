@@ -63,6 +63,10 @@ A interpretação da regra de recorrência usa o status **Inadimplente** após d
 
 ## Identidade visual
 
+O botão de sol/lua na tela de entrada e no cabeçalho alterna entre os temas claro e escuro. A preferência é salva neste navegador e permanece após sair ou recarregar a página. Sem escolha salva, o tema acompanha a configuração do dispositivo. Recibos e comprovantes de adesão mantêm fundo branco na impressão e ao salvar PDF.
+
+Para verificar o tema em um navegador dedicado com depuração na porta 9222 e o servidor na porta 3000, execute `node tests/theme-browser.js`. Esse teste limpa os dados do navegador de teste; uma porta alternativa pode ser definida pela variável `CDP_PORT`.
+
 Paleta e direção definidas nos brandbooks em `referencia - design`: verde esperança `#5B8C3E`, dourado terra `#8C6D46`, branco-osso `#FAF7F2`, espaço em branco e linguagem acolhedora. A logo institucional fornecida em `favicon.png` aparece no acesso, no menu, nos recibos e nos comprovantes de adesão, e é usada como ícone da aba do navegador. A composição tipográfica segue serifada para títulos e humanista para textos; como não há arquivos de fontes na referência, usa Georgia e Segoe UI locais como alternativas a Lora e Nunito, sem depender de internet.
 
 ## O que está simulado

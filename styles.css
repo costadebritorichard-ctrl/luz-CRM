@@ -15,3 +15,50 @@
 
 /* Respeita campos ocultos mesmo quando o formulário usa flex. */
 .field[hidden]{display:none}
+
+/* Preferência de aparência compartilhada pela entrada e pelas telas do CRM. */
+:root{color-scheme:light}
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;min-width:40px;min-height:40px;flex-shrink:0}
+.theme-toggle:focus-visible{outline:2px solid var(--green)}
+.login-content{position:relative}
+.login-theme{position:absolute;top:18px;right:20px}
+html[data-theme="dark"]{color-scheme:dark;--green:#a3cb83;--dark:#c2dda8;--gold:#d7bb86;--paper:#151c18;--ink:#e6ece2;--muted:#adb9a6;--line:#374238;--soft:#2a382a;--coral:#f3a18d;--surface:#1e2821;--raised:#263229;--gold-soft:#3b3324;--red-soft:#402a27}
+html[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+html[data-theme="dark"] :is(.sidebar,.topbar,.panel,.metric,.card,.compact-card,.login,dialog,input,select,textarea,.input){background:var(--surface);border-color:var(--line)}
+html[data-theme="dark"] :is(.nav-label,.nav-item,.sidebar-foot,.breadcrumb,.axis,.page-footer,.login-bottom,.card-move,.tab,.event p){color:var(--muted)}
+html[data-theme="dark"] .breadcrumb b{color:var(--ink)}
+html[data-theme="dark"] :is(.nav-item:hover,.modal-foot,th,.contact-selection-bar,.recipient-option.is-unavailable){background:var(--raised);color:var(--muted)}
+html[data-theme="dark"] :is(.nav-item.active,.avatar,.compact-contact>.avatar,.nav-count,.column-heading span:last-child,.compact-kanban .stage-number,.stage-tab.active){background:var(--soft);color:var(--dark)}
+html[data-theme="dark"] :is(.sidebar-note,.environment,.welcome,.notice,.notice.green,.notice.red,.btn.secondary,.btn.danger,.timeline,.card-footer,.column-heading,.compact-kanban .column-heading,td){border-color:var(--line)}
+html[data-theme="dark"] :is(.welcome,.login-story){background:#253426}
+html[data-theme="dark"] :is(.welcome p,.login-story p,.login-story footer){color:var(--muted)}
+html[data-theme="dark"] :is(.environment,.notice,.badge.gold,.metric-icon.gold,.compact-kanban .column:nth-child(2) .stage-number){background:var(--gold-soft);color:var(--gold)}
+html[data-theme="dark"] :is(.notice.red,.badge.red,.error,.btn.danger){background:var(--red-soft);color:var(--coral)}
+html[data-theme="dark"] .badge.gray{background:var(--raised);color:var(--muted)}
+html[data-theme="dark"] .btn{background:#527c3c;border-color:#6c9451;color:#fff}
+html[data-theme="dark"] .btn:hover{background:#416730;border-color:#88ad6a}
+html[data-theme="dark"] .btn.secondary{background:var(--raised);color:var(--ink)}
+html[data-theme="dark"] .btn.secondary:hover{background:var(--soft)}
+html[data-theme="dark"] .btn.quiet{background:transparent;border-color:transparent;color:var(--green)}
+html[data-theme="dark"] :is(tbody tr:hover,.contacts-panel .selected-row:hover){background:#2c3c2c}
+html[data-theme="dark"] .contacts-panel .selected-row{background:var(--soft)}
+html[data-theme="dark"] :is(.tabs,.column,.compact-kanban .column,.stage-tab){background:var(--raised);border-color:var(--line)}
+html[data-theme="dark"] .tab.active{background:var(--surface);color:var(--dark)}
+html[data-theme="dark"] :is(.column.over,.compact-kanban .column.over){background:var(--soft);border-color:var(--green)}
+html[data-theme="dark"] .card:hover{border-color:var(--green)}
+html[data-theme="dark"] .progress{background:var(--raised)}
+html[data-theme="dark"] .bars{background:repeating-linear-gradient(to top,transparent 0,transparent 46px,var(--line) 47px,var(--line) 48px)}
+html[data-theme="dark"] .event:before{border-color:var(--surface)}
+html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:var(--muted);opacity:1}
+html[data-theme="dark"] :is(input,select,textarea):focus{outline-color:#526d43}
+html[data-theme="dark"] .column-cards{scrollbar-color:#607456 transparent}
+html[data-theme="dark"] dialog::backdrop{background:#050a08b3}
+html[data-theme="dark"] .toast{background:#36572b;color:#fff}
+html[data-theme="dark"] .toast.error-toast{background:#8c4034}
+@media(max-width:650px){.topbar .environment{display:none}.topbar .theme-toggle{min-width:34px;min-height:34px;padding:5px}.login-theme{top:10px;right:15px}}
+/* Recibos e adesões continuam claros ao imprimir, independentemente do tema. */
+@media print{
+  html[data-theme="dark"]{color-scheme:light;--paper:#fff;--ink:#394034;--muted:#777d71;--line:#e7e9df;--dark:#36572b;--green:#5b8c3e;--gold:#8c6d46}
+  html[data-theme="dark"] body,html[data-theme="dark"] dialog#modal{background:#fff;color:var(--ink)}
+  .theme-toggle,.login-theme{display:none!important}
+}

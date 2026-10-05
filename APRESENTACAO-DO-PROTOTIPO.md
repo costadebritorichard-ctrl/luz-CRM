@@ -313,6 +313,8 @@ O Administrador também vê parte dessas ações na Visão geral. Concluir uma a
 
 ## 15. Experiência de uso
 
+O botão de sol/lua, disponível na entrada e no cabeçalho, alterna entre os temas claro e escuro. A escolha fica salva no navegador; sem escolha prévia, o CRM acompanha o tema do dispositivo. Recibos e comprovantes mantêm fundo branco na impressão ou ao salvar PDF.
+
 A identidade visual utiliza a marca institucional, tons de verde e dourado e linguagem acolhedora. A organização prioriza ações diretas na ficha, formulários divididos em etapas e identificação clara de status.
 
 A interface se adapta a computadores, tablets e celulares. O quadro do funil possui alternativa em lista, botões de movimentação e seleção de etapa no celular. Formulários têm rótulos, mensagens de validação e suporte à navegação por teclado.
