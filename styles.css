@@ -62,3 +62,24 @@ html[data-theme="dark"] .toast.error-toast{background:#8c4034}
   html[data-theme="dark"] body,html[data-theme="dark"] dialog#modal{background:#fff;color:var(--ink)}
   .theme-toggle,.login-theme{display:none!important}
 }
+
+/* Losses keep the same last-stage columns, including on mobile. */
+.automation-rule{padding:22px}.automation-rule h2{font-size:20px}.automation-rule p{margin:12px 0}.automation-rule small{line-height:1.7}.automation-rule footer{margin-top:18px;flex-wrap:wrap}.automation-subject{margin:16px 0;overflow-wrap:anywhere}.automation-meta{display:block;font-size:11px;line-height:1.6;margin-top:6px;color:var(--muted)}.automation-history{margin-top:25px}.automation-filters{padding:0 22px}.automation-rule>.flex{align-items:flex-start}.automation-rule .badge{flex-shrink:0}.automation-rules{margin-bottom:24px}
+.loss-card{display:block;width:100%;text-align:left;color:var(--ink);cursor:pointer}.loss-card:focus-visible{outline:2px solid var(--green);outline-offset:2px}.loss-card-actions{margin-top:9px;display:flex;justify-content:flex-end}.losses-kanban .column-cards{max-height:460px}@media(max-width:650px){.losses-kanban .column{margin-bottom:14px}.losses-kanban .column-cards{max-height:340px}}
+
+.losses-kanban{grid-template-columns:repeat(5,minmax(180px,1fr))}@media(min-width:651px) and (max-width:1100px){.losses-kanban{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.sidebar{overflow-y:auto}.sidebar>*{flex-shrink:0}
+
+.intake-rules{margin:22px 0}.intake-rules .panel-header,.intake-rules .list-row{gap:16px;flex-wrap:wrap}.intake-summary,.contact-tasks,.receipt-preview{margin:20px 0;padding:16px;border:1px solid var(--line);border-radius:12px}.intake-summary p{margin-top:12px}.enrolled-alert{color:var(--gold);line-height:1.7}.segment-filters{margin:18px 0}.selection-summary{margin:14px 0;font-size:13px}.receipt-preview p{margin:10px 0}.print-report h1{margin:24px 0 12px}.print-report>p{margin-bottom:14px}.print-report .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+.email-section-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:24px 0 18px}.email-section-heading p{color:var(--muted);font-size:13px;margin-top:7px}.email-simulation{margin:18px 0}.email-row-actions{display:flex;gap:5px;flex-wrap:wrap;min-width:180px}.email-recipient-filters{display:grid;grid-template-columns:1fr;gap:8px;margin:14px 0}.email-recipient-filters .field{margin:0}.email-recipient-filters select{width:100%;min-width:0}.email-review-timing{margin:18px 0;line-height:1.7}.email-tabs{overflow-x:auto}.email-tabs .tab{white-space:nowrap}.email-message,.email-recipients{min-width:0}.email-recipients h3{margin-bottom:12px}
+@media(max-width:650px){.email-section-heading{align-items:flex-start;flex-direction:column}.email-tabs{gap:4px}.email-tabs .tab{padding:10px}.email-simulation{font-size:12px}.email-recipient-filters{grid-template-columns:1fr}.email-row-actions{min-width:160px}}
+@media print{
+ @page{size:A4;margin:12mm}
+ html,body,dialog,.modal-body,.print-report{background:#fff!important;color:#222!important}
+ dialog#modal{position:static!important;inset:auto!important;width:100%!important;max-width:none!important;max-height:none!important;height:auto!important;overflow:visible!important;margin:0!important;padding:0!important}
+ .modal-body,.print-report .table-wrap{max-height:none!important;overflow:visible!important}
+ .print-help,.print-report button,.print-report .filters,.receipt button{display:none!important}
+ .print-report{font-size:10pt}.print-report .report-grid{display:block}.print-report .panel{box-shadow:none;border-color:#bbb;margin-bottom:16px}.print-report .metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .print-report table{width:100%;min-width:0!important;table-layout:fixed;font-size:9pt}.print-report th,.print-report td{padding:7px 4px;white-space:normal;overflow-wrap:anywhere}.print-report thead{display:table-header-group}.print-report tr,.print-report .metric,.print-report .funnel-row{break-inside:avoid}.print-report .panel-header{break-after:avoid}.print-report .contact-cell .avatar{display:none}.print-report .contact-name{display:inline!important;color:#222;background:none;border:0;padding:0;text-align:left;font:inherit}.print-report .progress{border:1px solid #ccc}.print-report .progress i{print-color-adjust:exact}.print-report .panel-body{padding:12px}
+}

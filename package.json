@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node server.js",
-    "test": "node --test tests/domain.test.js tests/site.test.js",
+    "test": "node --test tests/domain.test.js tests/automation.test.js tests/adjustments.test.js tests/email.test.js tests/site.test.js",
     "check": "node --check app.js && node --check domain.js && node --check server.js && node --check scripts/build-site.js",
     "build": "node scripts/build-site.js"
   }

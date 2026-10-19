@@ -1,5 +1,108 @@
 ﻿const {test}=require('node:test'),assert=require('node:assert/strict'),D=require('../domain');
 const actor={id:'admin',name:'Teste'};
+test('Corrige origens de todos os contatos, inclusive doadores, sem remover dados ou repetir automa??es',()=>{
+ const s=D.seed();assert.ok(s.contacts.every(c=>!['Site','Instagram'].includes(c.origin)||c.funnel==='Inbound'));
+ const lead={id:'legacy-conflict',name:'Lead antigo',origin:'Instagram',funnel:'Outbound',history:[]};s.contacts.push(lead);s.lists[0].contacts.push(lead.id);
+ const donor=s.contacts.find(c=>c.plan);donor.origin='Site';donor.funnel='Outbound';
+ const payments=JSON.stringify(s.payments),plan=JSON.stringify(donor.plan),lists=JSON.stringify(s.lists),count=s.contacts.length;
+ D.repairLegacyHistory(s);assert.equal(lead.funnel,'Inbound');assert.equal(donor.funnel,'Inbound');assert.equal(s.contacts.length,count);assert.equal(JSON.stringify(s.payments),payments);assert.equal(JSON.stringify(donor.plan),plan);assert.equal(JSON.stringify(s.lists),lists);
+ assert.ok(donor.history.some(h=>h.action==='Origem e direção corrigidas'));assert.equal((s.automationRuns||[]).length,0);
+ const before=JSON.stringify(s);D.repairLegacyHistory(s);assert.equal(JSON.stringify(s),before);
+});
+test('Cadastro completo força Site/Inbound mesmo se o envio informar Outbound',()=>{
+ const vm=require('node:vm'),fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../app.js'),'utf8').split("['pointerdown','keydown']")[0];
+ const origin={value:'Indicação'},direction={value:'Outbound',after(){}},label={},help={},back={};
+ const nodes={'[name=origin]':origin,'[name=funnel]':direction,'label[for=f-funnel]':label,'[data-action=contact-back]':back};
+ nodes['#modal']={addEventListener(){},querySelector(s){return nodes[s]}};
+ let submit;
+ const context=vm.createContext({CRM:D,document:{addEventListener(){},querySelector(s){return nodes[s]||{addEventListener(){}}},createElement(){return help}},capture(fn){submit=fn}});
+ const run=code=>vm.runInContext(code,context);run(source);
+ run("state=D.seed();user={id:'admin',name:'Teste',role:'Administrador'};formModal=(title,html,fn)=>capture(fn);save=()=>{};closeModal=()=>{};render=()=>{};profile=()=>{};toast=()=>{};");
+ run("contactStepTwo('',{name:'Teste Site',email:'teste-site@exemplo.com',phone:'',document:'',type:'PF',origin:'Indicação',funnel:'Outbound',stage:0,owner:'admin'})");
+ origin.value='Site';origin.onchange();assert.equal(direction.value,'Inbound');assert.equal(direction.disabled,true);
+ direction.value='Outbound';origin.value='Instagram';origin.onchange();assert.equal(direction.value,'Inbound');assert.equal(direction.disabled,true);
+ origin.value='WhatsApp';origin.onchange();assert.equal(direction.disabled,false);assert.match(direction.innerHTML,/>Outbound</);
+ direction.value='Outbound';origin.value='Site';origin.onchange();assert.equal(direction.value,'Inbound');
+ submit({origin:'Site',funnel:'Outbound',stage:'0',owner:'admin'});
+ const saved=JSON.parse(run("JSON.stringify(state.contacts.find(c=>c.email==='teste-site@exemplo.com'))"));
+ assert.equal(saved.origin,'Site');assert.equal(saved.funnel,'Inbound');assert.match(saved.history.find(e=>e.action==='Contato cadastrado').details,/Site · Inbound/);
+ run("contactStepTwo('',{name:'Teste Instagram',email:'teste-instagram@exemplo.com',phone:'',document:'',type:'PF',origin:'Instagram',funnel:'Outbound',stage:0,owner:'admin'})");
+ submit({origin:'Instagram',funnel:'Outbound',stage:'0',owner:'admin'});
+ assert.equal(run("state.contacts.find(c=>c.email==='teste-instagram@exemplo.com').funnel"),'Inbound');
+});
+test('Site exige Inbound; WhatsApp admite ambas as iniciativas sem alterar cadastros antigos',()=>{
+ const s=D.seed(),c={...s.contacts[8],origin:'Site',funnel:'Outbound'},before=JSON.stringify(c);
+ assert.throws(()=>D.validateContact(c,s.contacts,c.id),/Site.*Inbound/);
+ assert.equal(JSON.stringify(c),before);
+ assert.throws(()=>D.validateContact({...c,origin:'Instagram'},s.contacts,c.id),/Instagram.*Inbound/);
+ assert.doesNotThrow(()=>D.validateContact({...c,origin:'Instagram',funnel:'Inbound'},s.contacts,c.id));
+ assert.doesNotThrow(()=>D.validateContact(c,s.contacts,c.id,true));
+ c.funnel='Inbound';assert.doesNotThrow(()=>D.validateContact(c,s.contacts,c.id));
+ c.origin='WhatsApp';
+ for(const funnel of ['Inbound','Outbound']){c.funnel=funnel;assert.doesNotThrow(()=>D.validateContact(c,s.contacts,c.id))}
+});
+test('Etapas de perdas são independentes da captação, com agenda e histórico',()=>{
+ const s=D.seed(),c=s.contacts[0],plan=JSON.stringify(c.plan),stage=c.stage;
+ D.exitCadence(s,actor,c.id,{reason:'Sem retorno',date:D.today()});
+ assert.equal(D.lossStage(c),0);delete c.cadenceExit.lossStage;assert.equal(D.lossStage(c),0);
+ const before=JSON.stringify(s);
+ assert.throws(()=>D.moveLoss(s,actor,c.id,5));
+ assert.throws(()=>D.moveLoss(s,actor,c.id,2));
+ assert.throws(()=>D.moveLoss(s,actor,c.id,2,'','2026-02-30'));
+ assert.equal(JSON.stringify(s),before);
+ D.moveLoss(s,actor,c.id,2,'Conversar novamente',D.today());
+ assert.equal(c.cadenceExit.followUpDate,D.today());assert.equal(D.lossStage(c),2);
+ assert.equal(c.stage,stage);assert.equal(JSON.stringify(c.plan),plan);
+ assert.match(c.history[0].details,/Retomada agendada/);
+ D.moveLoss(s,actor,c.id,4,'Encerrar');assert.equal(c.cadenceExit.followUpDate,'');
+ D.moveLoss(s,actor,c.id,1,'Reavaliar');assert.equal(D.lossStage(c),1);
+ D.resumeCadence(s,actor,c.id,0,'Retomar');assert.equal(c.cadenceEpisodes[0].lossStage,1);
+ assert.throws(()=>D.moveLoss(s,actor,c.id,0));
+});
+test('Funil renderiza perdas por etapa e filtra pela data da saída',()=>{
+ const vm=require('node:vm'),fs=require('node:fs');
+ const source=fs.readFileSync(require.resolve('../app.js'),'utf8').split("['pointerdown','keydown']")[0];
+ const context=vm.createContext({CRM:D,document:{addEventListener(){},querySelector(){return {addEventListener(){}}}}});
+ vm.runInContext(source,context);
+ const run=code=>vm.runInContext(code,context);
+ run("state=D.seed();user={id:'admin',role:'Administrador'};page='funnel';state.contacts[0].created='2000-01-01T12:00:00Z';D.exitCadence(state,user,state.contacts[0].id,{reason:'Sem retorno',date:D.today()});page='losses';filters.period=D.month();");
+ let html=run('content()');assert.match(html,/Helena Carvalho/);assert.match(html,/Sem retorno/);assert.match(html,/data-action="profile"/);assert.match(html,/losses-kanban/);
+ assert.match(html,/Perda registrada/);assert.match(html,/Encerrado sem retomada/);assert.doesNotMatch(html,/Aprendizado e descoberta/);
+ run("filters.lossReason='Outros'");assert.doesNotMatch(run('content()'),/Helena Carvalho/);
+ run("filters.lossReason='';page='funnel';filters.period=''");assert.doesNotMatch(run('content()'),/Helena Carvalho/);
+ run("D.resumeCadence(state,user,state.contacts[0].id,1,'Retomar conversa')");assert.match(run('content()'),/Helena Carvalho/);
+ let rendered='';context.capture=(body)=>{rendered=body};run("modal=(title,body)=>capture(body);profile(state.contacts[8].id)");assert.match(rendered,/cadence-exit/);
+ run("D.exitCadence(state,user,state.contacts[8].id,{reason:'Outros',note:'Teste',date:D.today()});profile(state.contacts[8].id)");assert.match(rendered,/cadence-resume/);assert.doesNotMatch(rendered,/data-action="payment"/);assert.doesNotMatch(rendered,/data-action="convert"/);
+});
+test('Perdas e retomadas preservam finanças, origem e episódios após recarga',()=>{
+ let s=D.seed();const c=s.contacts.find(c=>c.plan),id=c.id;
+ const financial=JSON.stringify({plan:c.plan,payments:s.payments,pending:D.pending(s)}),origin=c.origin,funnel=c.funnel,stage=c.stage;
+ D.exitCadence(s,actor,id,{reason:'Sem retorno',note:'Contato manual sem resposta',date:D.today()});
+ assert.equal(D.outsideCadence(c),true);assert.equal(c.cadenceExit.stage,stage);
+ assert.equal(c.cadenceExit.actorName,actor.name);
+ assert.throws(()=>D.exitCadence(s,actor,id,{reason:'Sem interesse',date:D.today()}));
+ assert.throws(()=>D.move(s,actor,id,stage===0?1:0));
+ s=JSON.parse(JSON.stringify(s));const restored=s.contacts.find(c=>c.id===id);
+ assert.equal(D.outsideCadence(restored),true);
+ assert.throws(()=>D.resumeCadence(s,actor,id,0,' '));
+ D.resumeCadence(s,actor,id,1,'Deseja conversar novamente');
+ assert.equal(D.outsideCadence(restored),false);assert.equal(restored.stage,1);
+ assert.equal(restored.origin,origin);assert.equal(restored.funnel,funnel);
+ assert.equal(restored.cadenceEpisodes.length,1);
+ assert.equal(JSON.stringify({plan:restored.plan,payments:s.payments,pending:D.pending(s)}),financial);
+ D.exitCadence(s,actor,id,{reason:'Outros',note:'Nova saída',date:D.today()});
+ D.resumeCadence(s,actor,id,2,'Retomada posterior');assert.equal(restored.cadenceEpisodes.length,2);
+ assert.equal(restored.history.filter(e=>e.action==='Saída da cadência').length,2);
+});
+test('Perdas validam motivo, explicação e data sem efeitos parciais',()=>{
+ const s=D.seed(),c=s.contacts.find(c=>!c.plan),before=JSON.stringify(s);
+ for(const d of [{reason:'',date:D.today()},{reason:'Outros',note:' ',date:D.today()},{reason:'Sem retorno',date:'2026-02-30'},{reason:'Sem retorno',date:'2999-01-01'},{reason:'Sem retorno',date:'2000-01-01'}])assert.throws(()=>D.exitCadence(s,actor,c.id,d));
+ assert.equal(JSON.stringify(s),before);
+ D.exitCadence(s,actor,c.id,{reason:'Sem interesse',date:D.today()});
+ const exited=JSON.stringify(s);assert.throws(()=>D.convert(s,actor,c.id,{mode:'Pontual',amount:10}));assert.equal(JSON.stringify(s),exited);
+ D.resumeCadence(s,actor,c.id,0,'Recomeçar');D.convert(s,actor,c.id,{mode:'Pontual',amount:10});assert.ok(c.plan);
+});
 test('Históricos novos preservam acentos e separadores',()=>{
   const s=D.seed(),entries=[...s.audit,...s.contacts.flatMap(c=>c.history)];
   assert.ok(entries.some(e=>e.action==='Doação recebida'));
