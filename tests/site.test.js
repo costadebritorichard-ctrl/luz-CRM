@@ -16,7 +16,7 @@ test('Publicação contém somente os arquivos do aplicativo com caminhos relati
   const html = fs.readFileSync(path.join(output, 'index.html'), 'utf8');
   for (const match of html.matchAll(/(?:src|href)="([^"]+)"/g)) {
     assert.ok(!match[1].startsWith('/'), 'Caminho deve funcionar sob /nome-do-repositorio/');
-    assert.ok(fs.existsSync(path.join(output, match[1])), 'Referência ausente: ' + match[1]);
+    assert.ok(fs.existsSync(path.join(output, match[1].split('?')[0])), 'Referência ausente: ' + match[1]);
   }
   const unexpected = path.join(output, 'documento-nao-publicar.txt');
   fs.writeFileSync(unexpected, 'Este arquivo deve impedir a publicação.');
