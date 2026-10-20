@@ -1,7 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),vm=require('node:vm');
-const D=require('../domain');
+const D=require('./fixtures/seed.cjs');
 function fixture(){
  const a={id:'admin',name:'Administrador',role:'Administrador',active:true},op={id:'operator',name:'Operador',role:'Operador de Captação',active:true};
  const s={version:1,users:[a,op],contacts:[],payments:[],lists:[{id:'list',name:'Entrada',contacts:[],imports:[]}],tasks:[],audit:[],campaigns:[]};
@@ -111,7 +111,7 @@ test('AJ-09 relatório usa os mesmos filtros e representa período vazio sem rea
 test('Telas mostram novos controles e escapam texto de regras e tarefas',()=>{
  const {s,a}=fixture();const c=contact(s);D.convert(s,a,c.id,{mode:'Pontual',amount:100});const rule=intake(s,a,{name:'<script>regra</script>',taskText:'<img src=x>'});D.audit(s,a,'Contato cadastrado',c.id);
  let html='';const nodes={'#modal':{addEventListener(){}}};const context=vm.createContext({CRM:D,fixture:s,actor:a,document:{addEventListener(){},querySelector(q){return nodes[q]||{addEventListener(){}}}},capture(x){html=x}});
- vm.runInContext(fs.readFileSync(require.resolve('../app.js'),'utf8').split("['pointerdown','keydown']")[0],context);
+ vm.runInContext(fs.readFileSync(require.resolve('./fixtures/prototype-app.cjs'),'utf8').split("['pointerdown','keydown']")[0],context);
  const run=code=>vm.runInContext(code,context);run('state=fixture;user=actor;modal=(title,body)=>capture(body);');
  run('capture(intakeRulesHTML())');assert.match(html,/&lt;script&gt;/);assert.doesNotMatch(html,/<script>regra/);
  run(`profile('${c.id}')`);assert.match(html,/Sócio Inscrito/);assert.match(html,/Nenhuma doação financeira registrada/);assert.match(html,/Resultado do pós-cadastro/);assert.match(html,/&lt;img src=x&gt;/);

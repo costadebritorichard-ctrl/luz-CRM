@@ -1,5 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const D=require('../domain');
+const D=require('./fixtures/seed.cjs');
 function fixture(){
  const a={id:'admin',name:'Admin',role:'Administrador',active:true},op={id:'operator',name:'Operador',role:'Operador de Captação',active:true};
  const s={users:[a,op],contacts:[{id:'lead',name:'Pessoa Teste',email:'pessoa@exemplo.com',origin:'Site',funnel:'Inbound',stage:0,history:[],created:new Date().toISOString()}],payments:[],lists:[],tasks:[],audit:[],campaigns:[]};
@@ -112,7 +112,7 @@ test('Validação e permissões não alteram uma programação válida em caso d
 test('Nova tela centraliza automações e histórico anterior sem item Automações no menu',()=>{
  const fs=require('node:fs'),vm=require('node:vm'),{s,a}=fixture();D.ensureAutomations(s);D.ensureExtensions(s);s.campaigns.push({id:'antigo',subject:'Mensagem anterior',body:'Texto',contacts:['lead'],at:new Date().toISOString()});
  const nodes={'#app':{},'#modal':{addEventListener(){}}};const context=vm.createContext({CRM:D,fixture:s,actor:a,document:{documentElement:{dataset:{theme:'light'}},addEventListener(){},querySelector(q){return nodes[q]||{addEventListener(){}}}}});
- const run=code=>vm.runInContext(code,context);run(fs.readFileSync(require.resolve('../app.js'),'utf8').split("['pointerdown','keydown']")[0]);
+ const run=code=>vm.runInContext(code,context);run(fs.readFileSync(require.resolve('./fixtures/prototype-app.cjs'),'utf8').split("['pointerdown','keydown']")[0]);
  run("state=fixture;user=actor;page='emails';bindPage=()=>{};render()");assert.match(nodes['#app'].innerHTML,/data-id="emails"/);assert.doesNotMatch(nodes['#app'].innerHTML,/data-id="automations"[^>]*aria-current/);assert.doesNotMatch(nodes['#app'].innerHTML,/nav-item[^>]*data-id="automations"/);
  run("emailTab='automations'");assert.match(run('content()'),/Tratamento pós-cadastro/);assert.match(run('content()'),/Nova automação/);
  run("emailTab='history'");assert.match(run('content()'),/Mensagem anterior/);

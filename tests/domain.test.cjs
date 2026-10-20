@@ -1,4 +1,4 @@
-﻿const {test}=require('node:test'),assert=require('node:assert/strict'),D=require('../domain');
+﻿const {test}=require('node:test'),assert=require('node:assert/strict'),D=require('./fixtures/seed.cjs');
 const actor={id:'admin',name:'Teste'};
 test('Corrige origens de todos os contatos, inclusive doadores, sem remover dados ou repetir automa??es',()=>{
  const s=D.seed();assert.ok(s.contacts.every(c=>!['Site','Instagram'].includes(c.origin)||c.funnel==='Inbound'));
@@ -11,7 +11,7 @@ test('Corrige origens de todos os contatos, inclusive doadores, sem remover dado
 });
 test('Cadastro completo força Site/Inbound mesmo se o envio informar Outbound',()=>{
  const vm=require('node:vm'),fs=require('node:fs');
- const source=fs.readFileSync(require.resolve('../app.js'),'utf8').split("['pointerdown','keydown']")[0];
+ const source=fs.readFileSync(require.resolve('./fixtures/prototype-app.cjs'),'utf8').split("['pointerdown','keydown']")[0];
  const origin={value:'Indicação'},direction={value:'Outbound',after(){}},label={},help={},back={};
  const nodes={'[name=origin]':origin,'[name=funnel]':direction,'label[for=f-funnel]':label,'[data-action=contact-back]':back};
  nodes['#modal']={addEventListener(){},querySelector(s){return nodes[s]}};
@@ -62,7 +62,7 @@ test('Etapas de perdas são independentes da captação, com agenda e histórico
 });
 test('Funil renderiza perdas por etapa e filtra pela data da saída',()=>{
  const vm=require('node:vm'),fs=require('node:fs');
- const source=fs.readFileSync(require.resolve('../app.js'),'utf8').split("['pointerdown','keydown']")[0];
+ const source=fs.readFileSync(require.resolve('./fixtures/prototype-app.cjs'),'utf8').split("['pointerdown','keydown']")[0];
  const context=vm.createContext({CRM:D,document:{addEventListener(){},querySelector(){return {addEventListener(){}}}}});
  vm.runInContext(source,context);
  const run=code=>vm.runInContext(code,context);

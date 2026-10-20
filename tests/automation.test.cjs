@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),D=require('../domain');
+const {test}=require('node:test'),assert=require('node:assert/strict'),D=require('./fixtures/seed.cjs');
 function fixture(){
  const s=D.seed(),operator={id:'operator',name:'Operador Teste',role:'Operador de Captação',active:true},admin={id:'admin',name:'Admin Teste',role:'Administrador',active:true};
  s.users=[admin,operator];D.ensureAutomations(s);return {s,operator,admin,c:s.contacts.find(c=>!c.plan&&c.funnel==='Inbound')};
@@ -97,7 +97,7 @@ test('Tela e revisão estão disponíveis para Operador e escapam o texto dos mo
  const vm=require('node:vm'),fs=require('node:fs'),{s,operator,c}=fixture();
  const r=rule(s,operator,{subject:'<script>{{nome}}</script>'});register(s,operator,c);D.processAutomations(s);
  const context=vm.createContext({CRM:D,document:{addEventListener(){},querySelector(){return {addEventListener(){}}}},fixture:s,operator});
- vm.runInContext(fs.readFileSync(require.resolve('../app.js'),'utf8').split("['pointerdown','keydown']")[0],context);
+ vm.runInContext(fs.readFileSync(require.resolve('./fixtures/prototype-app.cjs'),'utf8').split("['pointerdown','keydown']")[0],context);
  const run=code=>vm.runInContext(code,context);run("state=fixture;user=operator;page='emails';emailTab='automations'");
  const html=run('content()');assert.match(html,/Nova automação/);assert.match(html,/automation-edit/);assert.match(html,/automation-pause/);assert.match(html,/Envio simulado/);assert.doesNotMatch(html,/<script>/);
  let body='';context.capture=value=>body=value;run("modal=(title,html)=>capture(html)");run('automationRunDetail(state.automationRuns[0].id)');assert.match(body,/Sistema/);assert.match(body,/&lt;script&gt;/);
@@ -110,7 +110,7 @@ test('Operador conclui as duas etapas do formulário e ativa a regra pela revis�
  let submit,formHtml='',preview='';
  const context=vm.createContext({CRM:D,document:{addEventListener(){},querySelector(s){return nodes[s]||{addEventListener(){}}}},fixture:s,operator,captureForm(html,fn){formHtml=html;submit=fn},captureModal(html){preview=html}});
  const run=code=>vm.runInContext(code,context);
- run(fs.readFileSync(require.resolve('../app.js'),'utf8').split("['pointerdown','keydown']")[0]);
+ run(fs.readFileSync(require.resolve('./fixtures/prototype-app.cjs'),'utf8').split("['pointerdown','keydown']")[0]);
  run("state=fixture;user=operator;formModal=(title,body,fn)=>captureForm(body,fn);modal=(title,body)=>captureModal(body);save=()=>D.processAutomations(state);render=()=>{};closeModal=()=>{};activeUser=()=>{};toast=()=>{};automationForm()");
  assert.match(formHtml,/1 de 2/);
  nodes['[name=event]'].value='stage';nodes['[name=origin]'].value='Instagram';nodes['[name=stage]'].value='1';nodes['[name=event]'].onchange();
